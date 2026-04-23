@@ -3,6 +3,9 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
+    private const string PLAYER_TAG = "Player";
+    private const string GROUND_TAG = "Ground";
+
     [Header("Salud")]
     public int health = 3;
     public float knockbackForce = 5f;
@@ -25,47 +28,102 @@ public class PlayerController : MonoBehaviour
         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
 
-
-
     [Header("Movimiento")]
     public float speed = 8f;
-    public float jumpForce = 12f;
+    public float jumpForce = 18f;
     
     [Header("Disparo")]
-    public GameObject bulletPrefab; // Arrastra aquí el PREFAB de la bala
-    public Transform firePoint;     // Arrastra aquí el objeto FirePoint
+    public GameObject bulletPrefab;
+    public Transform firePoint;
+    public float fireRate = 0.15f;
+    private float nextFireTime = 0f;
     
     private Rigidbody2D rb;
     private Vector2 moveInput;
     private bool isGrounded;
+    private bool isCrouching;
+    private Vector2 aimDirection = Vector2.right;
 
     void Start() => rb = GetComponent<Rigidbody2D>();
 
     void Update()
     {
-        // Movimiento lateral
+        HandleInput();
+        HandleAiming();
+        HandleJumping();
+        HandleShooting();
+    }
+
+    private void HandleInput()
+    {
+        bool wPressed = Keyboard.current.wKey.isPressed;
+        bool sPressed = Keyboard.current.sKey.isPressed;
+        bool aPressed = Keyboard.current.aKey.isPressed;
+        bool dPressed = Keyboard.current.dKey.isPressed;
+
+        isCrouching = sPressed;
+
         float x = 0;
-        if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) x = -1;
-        else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) x = 1;
+        if (aPressed || Keyboard.current.leftArrowKey.isPressed) x = -1;
+        else if (dPressed || Keyboard.current.rightArrowKey.isPressed) x = 1;
         moveInput = new Vector2(x, 0);
 
-        // Salto
-        if (Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded)
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+        if (x > 0) transform.localScale = new Vector3(-1, 1, 1);
+        else if (x < 0) transform.localScale = new Vector3(1, 1, 1);
+    }
 
-        // DISPARO (Tecla F o Clic Izquierdo)
-        if (Keyboard.current.fKey.wasPressedThisFrame || Mouse.current.leftButton.wasPressedThisFrame)
+    private void HandleAiming()
+    {
+        bool wPressed = Keyboard.current.wKey.isPressed;
+        bool sPressed = Keyboard.current.sKey.isPressed;
+        bool aPressed = Keyboard.current.aKey.isPressed;
+        bool dPressed = Keyboard.current.dKey.isPressed;
+
+        aimDirection = Vector2.right;
+
+        Vector2 aimInput = Vector2.zero;
+        if (wPressed) aimInput.y = 1;
+        if (sPressed) aimInput.y = -1;
+        if (aPressed) aimInput.x = -1;
+        if (dPressed) aimInput.x = 1;
+
+        if (aimInput != Vector2.zero)
+        {
+            aimDirection = aimInput.normalized;
+        }
+
+        float angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
+
+        if (isCrouching && !aPressed && !dPressed)
+            angle = Mathf.Clamp(angle, -75f, 75f);
+
+        if (aimDirection.x < 0) firePoint.rotation = Quaternion.Euler(0, 180, angle);
+        else firePoint.rotation = Quaternion.Euler(0, 0, angle);
+    }
+
+    private void HandleJumping()
+    {
+        if (Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded && !isCrouching)
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+    }
+
+    private void HandleShooting()
+    {
+        if ((Keyboard.current.fKey.isPressed || Mouse.current.leftButton.isPressed) && Time.time >= nextFireTime)
+        {
             Shoot();
+            nextFireTime = Time.time + fireRate;
+        }
     }
 
     void Shoot()
     {
-        // Creamos la bala en la posición y rotación del FirePoint
-        Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        bullet.GetComponent<Rigidbody2D>().linearVelocity = aimDirection * bullet.GetComponent<Bullet>().speed;
     }
 
     void FixedUpdate() => rb.linearVelocity = new Vector2(moveInput.x * speed, rb.linearVelocity.y);
 
-    private void OnCollisionEnter2D(Collision2D c) { if (c.gameObject.CompareTag("Ground")) isGrounded = true; }
-    private void OnCollisionExit2D(Collision2D c) { if (c.gameObject.CompareTag("Ground")) isGrounded = false; }
+    private void OnCollisionEnter2D(Collision2D c) { if (c.gameObject.CompareTag(GROUND_TAG)) isGrounded = true; }
+    private void OnCollisionExit2D(Collision2D c) { if (c.gameObject.CompareTag(GROUND_TAG)) isGrounded = false; }
 }
