@@ -39,7 +39,7 @@ Assets/
     Scenes/
       Boot.unity
       MainMenu.unity
-      Level_01_Jungla.unity
+      MainGameplay.unity
       Level_02_Ciudad.unity
       GameOver.unity
     Scripts/
@@ -67,7 +67,7 @@ Assets/
   - `Player/Player.prefab`
   - `Weapons/Bala.prefab`
 - Escenas en `Assets/_MetalSlugPE/Scenes/` y pruebas en `Assets/_MetalSlugPE/Sandbox/Scenes/`.
-  - Escena principal actual: `Level_01_Jungla.unity`
+  - Escena principal actual: `MainGameplay.unity`
 - Se mantuvieron GUID de assets y scripts movidos para no romper referencias.
 - Se definieron namespaces base:
   - `MetalSlugPE.Player`
