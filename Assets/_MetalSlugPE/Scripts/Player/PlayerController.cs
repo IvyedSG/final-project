@@ -9,7 +9,7 @@ namespace MetalSlugPE.Player
         private const string GROUND_TAG = "Ground";
 
         [Header("Salud")]
-        public int health = 3;
+        public int health = 1;
         public float knockbackForce = 5f;
 
         public void TakeDamage(int damage)

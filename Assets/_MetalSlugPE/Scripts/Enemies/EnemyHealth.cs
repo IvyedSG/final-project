@@ -1,0 +1,29 @@
+using UnityEngine;
+
+namespace MetalSlugPE.Enemies
+{
+    public class EnemyHealth : MonoBehaviour
+    {
+        public int maxHealth = 1;
+        private int currentHealth;
+
+        void Start()
+        {
+            currentHealth = maxHealth;
+        }
+
+        public void TakeDamage(int damage)
+        {
+            currentHealth -= damage;
+            if (currentHealth <= 0)
+            {
+                Die();
+            }
+        }
+
+        void Die()
+        {
+            Destroy(gameObject);  // El enemigo muere y se destruye
+        }
+    }
+}
