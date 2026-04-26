@@ -5,18 +5,21 @@ namespace MetalSlugPE.Enemies
 {
     public class EnemyDamage : MonoBehaviour
     {
-        public int damage = 1;
+        [SerializeField] private int danio = 1;
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
-            if (collision.gameObject.CompareTag("Player"))
-            {
-                PlayerController player = collision.gameObject.GetComponent<PlayerController>();
+            if (!collision.gameObject.CompareTag("Player")) return;
 
-                if (player != null)
-                {
-                    player.TakeDamage(damage);
-                }
+            PlayerHealth saludJugador = collision.gameObject.GetComponent<PlayerHealth>();
+            if (saludJugador == null)
+            {
+                saludJugador = collision.gameObject.GetComponentInParent<PlayerHealth>();
+            }
+
+            if (saludJugador != null)
+            {
+                saludJugador.RecibirDanio(danio);
             }
         }
     }

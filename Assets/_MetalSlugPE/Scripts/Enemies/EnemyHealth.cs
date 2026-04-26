@@ -4,26 +4,26 @@ namespace MetalSlugPE.Enemies
 {
     public class EnemyHealth : MonoBehaviour
     {
-        public int maxHealth = 1;
-        private int currentHealth;
+        public int saludMaxima = 1;
+        private int saludActual;
 
-        void Start()
+        private void Start()
         {
-            currentHealth = maxHealth;
+            saludActual = saludMaxima;
         }
 
-        public void TakeDamage(int damage)
+        public void RecibirDanio(int danio)
         {
-            currentHealth -= damage;
-            if (currentHealth <= 0)
+            saludActual -= danio;
+            if (saludActual <= 0)
             {
-                Die();
+                Morir();
             }
         }
 
-        void Die()
+        private void Morir()
         {
-            Destroy(gameObject);  // El enemigo muere y se destruye
+            Destroy(gameObject);
         }
     }
 }

@@ -119,6 +119,11 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!4 &203184261 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1304879304662527852, guid: 51e5fee0768f350418f047b4157e8e2b, type: 3}
+  m_PrefabInstance: {fileID: 417793310}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &258393753
 GameObject:
   m_ObjectHideFlags: 0
@@ -1305,6 +1310,22 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 0.4
       objectReference: {fileID: 0}
+    - target: {fileID: 3364552057684329157, guid: 51e5fee0768f350418f047b4157e8e2b, type: 3}
+      propertyPath: prefabBala
+      value: 
+      objectReference: {fileID: 8952336078229492913, guid: e2e6baabfbbad44fbb0d056357e4db1f, type: 3}
+    - target: {fileID: 3364552057684329157, guid: 51e5fee0768f350418f047b4157e8e2b, type: 3}
+      propertyPath: puntoDisparo
+      value: 
+      objectReference: {fileID: 203184261}
+    - target: {fileID: 3364552057684329157, guid: 51e5fee0768f350418f047b4157e8e2b, type: 3}
+      propertyPath: verificadorSuelo
+      value: 
+      objectReference: {fileID: 1699834012}
+    - target: {fileID: 3364552057684329157, guid: 51e5fee0768f350418f047b4157e8e2b, type: 3}
+      propertyPath: m_EditorClassIdentifier
+      value: Assembly-CSharp::MetalSlugPE.Enemies.EnemyPatrol
+      objectReference: {fileID: 0}
     - target: {fileID: 6400325254629938021, guid: 51e5fee0768f350418f047b4157e8e2b, type: 3}
       propertyPath: m_Name
       value: Enemigo
@@ -1703,6 +1724,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &1699834012 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4731529519076720718, guid: 51e5fee0768f350418f047b4157e8e2b, type: 3}
+  m_PrefabInstance: {fileID: 417793310}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1806817391
 GameObject:
   m_ObjectHideFlags: 0

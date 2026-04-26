@@ -6,41 +6,56 @@ namespace MetalSlugPE.Weapons
 {
     public class Bullet : MonoBehaviour
     {
-        private const string PLAYER_TAG = "Player";
+        private const string ETIQUETA_JUGADOR = "Player";
 
-        public float speed = 20f;
-        public float lifeTime = 2f;
+        public float velocidad = 20f;
+        public float tiempoVida = 2f;
+        public GameObject disparador;
 
-        public GameObject shooter;
-
-        void Start()
+        private void Start()
         {
-            Destroy(gameObject, lifeTime);
+            Destroy(gameObject, tiempoVida);
         }
 
-        private void OnTriggerEnter2D(Collider2D hitInfo)
+        private void OnTriggerEnter2D(Collider2D impacto)
         {
-            if (hitInfo.CompareTag(PLAYER_TAG))
+            if (impacto == null) return;
+
+            if (disparador != null)
             {
-                // Daño al jugador
-                PlayerController player = hitInfo.GetComponent<PlayerController>();
-                if (player != null)
-                {
-                    player.TakeDamage(1);
-                }
-                Destroy(gameObject);
+                if (impacto.gameObject == disparador) return;
+                if (impacto.transform.IsChildOf(disparador.transform)) return;
             }
-            else
+
+            if (impacto.CompareTag(ETIQUETA_JUGADOR))
             {
-                Debug.Log("Impacto en: " + hitInfo.name);
-                // Solo dañar a enemigos (no al disparador)
-                EnemyHealth enemy = hitInfo.GetComponent<EnemyHealth>();
-                if (enemy != null && hitInfo.gameObject != shooter)
+                PlayerHealth saludJugador = impacto.GetComponent<PlayerHealth>();
+                if (saludJugador == null)
                 {
-                    enemy.TakeDamage(1);
+                    saludJugador = impacto.GetComponentInParent<PlayerHealth>();
                 }
+
+                if (saludJugador != null)
+                {
+                    saludJugador.RecibirDanio(1);
+                }
+
                 Destroy(gameObject);
+                return;
             }
+
+            EnemyHealth saludEnemigo = impacto.GetComponent<EnemyHealth>();
+            if (saludEnemigo == null)
+            {
+                saludEnemigo = impacto.GetComponentInParent<EnemyHealth>();
+            }
+
+            if (saludEnemigo != null)
+            {
+                saludEnemigo.RecibirDanio(1);
+            }
+
+            Destroy(gameObject);
         }
     }
 }

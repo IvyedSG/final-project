@@ -215,15 +215,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09518e5cb715d4be9aa0677b0cc60b75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPatrol
-  speed: 3
-  chaseSpeed: 5
-  detectionRange: 5
-  groundCheck: {fileID: 4731529519076720718}
-  rayDistance: 1
-  bulletPrefab: {fileID: 8952336078229492913, guid: e2e6baabfbbad44fbb0d056357e4db1f, type: 3}
-  firePoint: {fileID: 1304879304662527852}
-  fireRate: 1
-  shootingRange: 7
+  velocidadPatrulla: 3
+  velocidadPersecucion: 5
+  rangoDeteccion: 5
+  verificadorSuelo: {fileID: 4731529519076720718}
+  distanciaRayo: 1
+  prefabBala: {fileID: 8952336078229492913, guid: e2e6baabfbbad44fbb0d056357e4db1f, type: 3}
+  puntoDisparo: {fileID: 1304879304662527852}
+  cadenciaDisparo: 1
+  rangoDisparo: 7
 --- !u!61 &4824632005532925928
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -282,7 +282,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f66869a309ed34278b9abebe9861ee70, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyDamage
-  damage: 1
+  danio: 1
 --- !u!114 &7008814423433938474
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -295,7 +295,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae3fec10c8d4bb94a9999767b86b3a63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MetalSlugPE.Enemies.EnemyHealth
-  maxHealth: 1
+  saludMaxima: 1
 --- !u!1 &8768298403392264751
 GameObject:
   m_ObjectHideFlags: 0

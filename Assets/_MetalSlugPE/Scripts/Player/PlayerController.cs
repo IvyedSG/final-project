@@ -6,163 +6,167 @@ namespace MetalSlugPE.Player
 {
     public class PlayerController : MonoBehaviour
     {
-        private const string GROUND_TAG = "Ground";
-
-        [Header("Salud")]
-        public int health = 1;
-        public float knockbackForce = 5f;
-
-        public void TakeDamage(int damage)
-        {
-            health -= damage;
-            Debug.Log("Vida restante: " + health);
-
-            if (health <= 0)
-            {
-                Die();
-            }
-        }
-
-        void Die()
-        {
-            Debug.Log("¡MORISTE!");
-            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-        }
+        private const string ETIQUETA_SUELO = "Ground";
 
         [Header("Movimiento")]
-        public float speed = 8f;
-        public float jumpForce = 18f;
+        public float velocidad = 8f;
+        public float fuerzaSalto = 18f;
 
         [Header("Disparo")]
-        public GameObject bulletPrefab;
-        public Transform firePoint;
-        public float fireRate = 0.15f;
-        private float nextFireTime = 0f;
+        public GameObject prefabBala;
+        public Transform puntoDisparo;
+        public float cadenciaDisparo = 0.15f;
+        private float TiempoDisparo = 0f;
 
-        private Rigidbody2D rb;
-        private Vector2 moveInput;
-        private bool isGrounded;
-        private bool isCrouching;
-        private Vector2 aimDirection = Vector2.right;
-        private Keyboard keyboard;
-        private Mouse mouse;
+        private Rigidbody2D cuerpo;
+        private Vector2 entradaMovimiento;
+        private bool estaEnSuelo;
+        private bool agachado;
+        private Vector2 direccionApunte = Vector2.right;
+        private Keyboard teclado;
+        private Mouse raton;
 
-        void Start()
+        private void Start()
         {
-            rb = GetComponent<Rigidbody2D>();
-            keyboard = Keyboard.current;
-            mouse = Mouse.current;
+            cuerpo = GetComponent<Rigidbody2D>();
+            teclado = Keyboard.current;
+            raton = Mouse.current;
         }
 
-        void OnEnable()
+        private void OnEnable()
         {
-            keyboard = Keyboard.current;
-            mouse = Mouse.current;
+            teclado = Keyboard.current;
+            raton = Mouse.current;
         }
 
-        void Update()
+        private void Update()
         {
-            HandleInput();
-            HandleAiming();
-            HandleJumping();
-            HandleShooting();
+            ProcesarEntrada();
+            ProcesarApuntado();
+            ProcesarSalto();
+            ProcesarDisparo();
         }
 
-        private void HandleInput()
+        private void ProcesarEntrada()
         {
-            if (keyboard == null)
+            if (teclado == null)
             {
-                moveInput = Vector2.zero;
-                isCrouching = false;
+                entradaMovimiento = Vector2.zero;
+                agachado = false;
                 return;
             }
 
-            bool wPressed = keyboard.wKey.isPressed;
-            bool sPressed = keyboard.sKey.isPressed;
-            bool aPressed = keyboard.aKey.isPressed;
-            bool dPressed = keyboard.dKey.isPressed;
+            bool teclaW = teclado.wKey.isPressed;
+            bool teclaS = teclado.sKey.isPressed;
+            bool teclaA = teclado.aKey.isPressed;
+            bool teclaD = teclado.dKey.isPressed;
 
-            isCrouching = sPressed;
+            agachado = teclaS;
 
-            float x = 0;
-            if (aPressed || keyboard.leftArrowKey.isPressed) x = -1;
-            else if (dPressed || keyboard.rightArrowKey.isPressed) x = 1;
-            moveInput = new Vector2(x, 0);
+            float ejeX = 0f;
+            if (teclaA || teclado.leftArrowKey.isPressed) ejeX = -1f;
+            else if (teclaD || teclado.rightArrowKey.isPressed) ejeX = 1f;
 
-            if (x > 0) transform.localScale = new Vector3(1, 1, 1);
-            else if (x < 0) transform.localScale = new Vector3(-1, 1, 1);
+            entradaMovimiento = new Vector2(ejeX, 0f);
+
+            if (ejeX > 0f) transform.localScale = new Vector3(1f, 1f, 1f);
+            else if (ejeX < 0f) transform.localScale = new Vector3(-1f, 1f, 1f);
         }
 
-        private void HandleAiming()
+        private void ProcesarApuntado()
         {
-            if (keyboard == null)
+            if (teclado == null || puntoDisparo == null) return;
+
+            bool teclaW = teclado.wKey.isPressed;
+            bool teclaS = teclado.sKey.isPressed;
+            bool teclaA = teclado.aKey.isPressed;
+            bool teclaD = teclado.dKey.isPressed;
+
+            direccionApunte = transform.localScale.x >= 0f ? Vector2.right : Vector2.left;
+
+            Vector2 entradaApunte = Vector2.zero;
+            if (teclaW) entradaApunte.y = 1f;
+            if (teclaS) entradaApunte.y = -1f;
+            if (teclaA) entradaApunte.x = -1f;
+            if (teclaD) entradaApunte.x = 1f;
+
+            if (entradaApunte != Vector2.zero)
             {
-                return;
+                direccionApunte = entradaApunte.normalized;
             }
 
-            bool wPressed = keyboard.wKey.isPressed;
-            bool sPressed = keyboard.sKey.isPressed;
-            bool aPressed = keyboard.aKey.isPressed;
-            bool dPressed = keyboard.dKey.isPressed;
+            float angulo = Mathf.Atan2(direccionApunte.y, direccionApunte.x) * Mathf.Rad2Deg;
 
-            aimDirection = transform.localScale.x >= 0f ? Vector2.right : Vector2.left;
-
-            Vector2 aimInput = Vector2.zero;
-            if (wPressed) aimInput.y = 1;
-            if (sPressed) aimInput.y = -1;
-            if (aPressed) aimInput.x = -1;
-            if (dPressed) aimInput.x = 1;
-
-            if (aimInput != Vector2.zero)
+            if (agachado && !teclaA && !teclaD)
             {
-                aimDirection = aimInput.normalized;
+                angulo = Mathf.Clamp(angulo, -75f, 75f);
             }
 
-            float angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
-
-            if (isCrouching && !aPressed && !dPressed)
-                angle = Mathf.Clamp(angle, -75f, 75f);
-
-            if (aimDirection.x < 0) firePoint.rotation = Quaternion.Euler(0, 180, angle);
-            else firePoint.rotation = Quaternion.Euler(0, 0, angle);
+            if (direccionApunte.x < 0f) puntoDisparo.rotation = Quaternion.Euler(0f, 180f, angulo);
+            else puntoDisparo.rotation = Quaternion.Euler(0f, 0f, angulo);
         }
 
-        private void HandleJumping()
+        private void ProcesarSalto()
         {
-            if (keyboard != null && keyboard.spaceKey.wasPressedThisFrame && isGrounded && !isCrouching)
-                rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-        }
-
-        private void HandleShooting()
-        {
-            bool keyboardShoot = keyboard != null && keyboard.fKey.isPressed;
-            bool mouseShoot = mouse != null && mouse.leftButton.isPressed;
-
-            if ((keyboardShoot || mouseShoot) && Time.time >= nextFireTime)
+            if (teclado != null && teclado.spaceKey.wasPressedThisFrame && estaEnSuelo && !agachado)
             {
-                Shoot();
-                nextFireTime = Time.time + fireRate;
+                cuerpo.AddForce(Vector2.up * fuerzaSalto, ForceMode2D.Impulse);
             }
         }
 
-        void Shoot()
+        private void ProcesarDisparo()
         {
-            GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
-            bullet.GetComponent<Rigidbody2D>().linearVelocity = aimDirection * bullet.GetComponent<Bullet>().speed;
+            bool disparaTeclado = teclado != null && teclado.fKey.isPressed;
+            bool disparaRaton = raton != null && raton.leftButton.isPressed;
+
+            if ((disparaTeclado || disparaRaton) && Time.time >= TiempoDisparo)
+            {
+                Disparar();
+                    TiempoDisparo = Time.time + cadenciaDisparo;
+            }
         }
 
-        void FixedUpdate()
+        private void Disparar()
         {
-            float horizontalVelocity = moveInput.x * speed;
-            if (Mathf.Abs(horizontalVelocity) < 0.001f)
+            if (prefabBala == null || puntoDisparo == null) return;
+
+            GameObject balaInstanciada = Instantiate(prefabBala, puntoDisparo.position, puntoDisparo.rotation);
+            Bullet bala = balaInstanciada.GetComponent<Bullet>();
+            Rigidbody2D cuerpoBala = balaInstanciada.GetComponent<Rigidbody2D>();
+
+            if (bala != null)
             {
-                horizontalVelocity = 0f;
+                bala.disparador = gameObject;
             }
 
-            rb.linearVelocity = new Vector2(horizontalVelocity, rb.linearVelocity.y);
+            if (cuerpoBala != null && bala != null)
+            {
+                cuerpoBala.linearVelocity = direccionApunte * bala.velocidad;
+            }
         }
 
-        private void OnCollisionEnter2D(Collision2D c) { if (c.gameObject.CompareTag(GROUND_TAG)) isGrounded = true; }
-        private void OnCollisionExit2D(Collision2D c) { if (c.gameObject.CompareTag(GROUND_TAG)) isGrounded = false; }
+        private void FixedUpdate()
+        {
+            float velocidadHorizontal = entradaMovimiento.x * velocidad;
+            if (Mathf.Abs(velocidadHorizontal) < 0.001f) velocidadHorizontal = 0f;
+
+            cuerpo.linearVelocity = new Vector2(velocidadHorizontal, cuerpo.linearVelocity.y);
+        }
+
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            if (collision.gameObject.CompareTag(ETIQUETA_SUELO))
+            {
+                estaEnSuelo = true;
+            }
+        }
+
+        private void OnCollisionExit2D(Collision2D collision)
+        {
+            if (collision.gameObject.CompareTag(ETIQUETA_SUELO))
+            {
+                estaEnSuelo = false;
+            }
+        }
     }
 }

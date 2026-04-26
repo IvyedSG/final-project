@@ -1,47 +1,48 @@
 using UnityEngine;
 using MetalSlugPE.Weapons;
+
 namespace MetalSlugPE.Enemies
 {
     public class EnemyPatrol : MonoBehaviour
     {
-        public float speed = 3f;
-        public float chaseSpeed = 5f;
-        public float detectionRange = 5f;
-        public Transform groundCheck;
-        public float rayDistance = 1f;
+        public float velocidadPatrulla = 3f;
+        public float velocidadPersecucion = 5f;
+        public float rangoDeteccion = 5f;
+        public Transform verificadorSuelo;
+        public float distanciaRayo = 1f;
 
-        private bool movingRight = true;
-        private Rigidbody2D rb;
-        private Transform player;
+        private bool moviendoDerecha = true;
+        private Rigidbody2D cuerpo;
+        private Transform jugador;
 
         [Header("Disparo")]
-        public GameObject bulletPrefab;  
-        public Transform firePoint;      
-        public float fireRate = 1f;
-        public float shootingRange = 7f;  
-        private float nextFireTime = 0f;
+        public GameObject prefabBala;
+        public Transform puntoDisparo;
+        public float cadenciaDisparo = 1f;
+        public float rangoDisparo = 7f;
+        private float TiempoDisparo = 0f;
 
-        void Start()
+        private void Start()
         {
-            rb = GetComponent<Rigidbody2D>();
-            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-            if (playerObject != null)
+            cuerpo = GetComponent<Rigidbody2D>();
+            GameObject objetoJugador = GameObject.FindGameObjectWithTag("Player");
+            if (objetoJugador != null)
             {
-                player = playerObject.transform;
+                jugador = objetoJugador.transform;
             }
         }
 
-        void Update()
+        private void Update()
         {
-            if (player == null)
+            if (jugador == null)
             {
                 Patrullar();
                 return;
             }
 
-            float distanceToPlayer = Vector2.Distance(transform.position, player.position);
+            float distanciaAlJugador = Vector2.Distance(transform.position, jugador.position);
 
-            if (distanceToPlayer < detectionRange)
+            if (distanciaAlJugador < rangoDeteccion)
             {
                 Perseguir();
             }
@@ -50,70 +51,88 @@ namespace MetalSlugPE.Enemies
                 Patrullar();
             }
 
-            if (distanceToPlayer < shootingRange && Time.time > nextFireTime)
+            if (distanciaAlJugador < rangoDisparo && Time.time > TiempoDisparo)
             {
-                Shoot();
-                nextFireTime = Time.time + fireRate;
+                Disparar();
+                TiempoDisparo = Time.time + cadenciaDisparo;
             }
         }
 
-        void Patrullar()
+        private void Patrullar()
         {
-            transform.Translate(Vector2.right * speed * Time.deltaTime);
-            RaycastHit2D groundInfo = Physics2D.Raycast(groundCheck.position, Vector2.down, rayDistance);
-            if (groundInfo.collider == false) Flip();
+            transform.Translate(Vector2.right * velocidadPatrulla * Time.deltaTime);
+            RaycastHit2D infoSuelo = Physics2D.Raycast(verificadorSuelo.position, Vector2.down, distanciaRayo);
+            if (infoSuelo.collider == false) Voltear();
         }
 
-        void Perseguir()
+        private void Perseguir()
         {
-            if (player.position.x > transform.position.x && !movingRight) Flip();
-            else if (player.position.x < transform.position.x && movingRight) Flip();
+            if (jugador.position.x > transform.position.x && !moviendoDerecha) Voltear();
+            else if (jugador.position.x < transform.position.x && moviendoDerecha) Voltear();
 
-            transform.position = Vector2.MoveTowards(transform.position, new Vector2(player.position.x, transform.position.y), chaseSpeed * Time.deltaTime);
+            transform.position = Vector2.MoveTowards(
+                transform.position,
+                new Vector2(jugador.position.x, transform.position.y),
+                velocidadPersecucion * Time.deltaTime
+            );
 
-            // Apuntar hacia el jugador
-            if (firePoint != null && player != null)
+            if (puntoDisparo != null && jugador != null)
             {
-                Vector2 direction = (player.position - firePoint.position).normalized;
-                float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-                firePoint.rotation = Quaternion.Euler(0f, 0f, angle);
+                Vector2 direccion = (jugador.position - puntoDisparo.position).normalized;
+                float angulo = Mathf.Atan2(direccion.y, direccion.x) * Mathf.Rad2Deg;
+                puntoDisparo.rotation = Quaternion.Euler(0f, 0f, angulo);
             }
 
-            if (Time.time > nextFireTime)
+            if (Time.time > TiempoDisparo)
             {
-                nextFireTime = Time.time + fireRate;
-                GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
-                bullet.GetComponent<Bullet>().shooter = gameObject;
-                bullet.GetComponent<Rigidbody2D>().linearVelocity = (player.position - firePoint.position).normalized * bullet.GetComponent<Bullet>().speed;
+                TiempoDisparo = Time.time + cadenciaDisparo;
+
+                if (prefabBala == null || puntoDisparo == null) return;
+
+                GameObject balaInstanciada = Instantiate(prefabBala, puntoDisparo.position, puntoDisparo.rotation);
+                Bullet bala = balaInstanciada.GetComponent<Bullet>();
+                Rigidbody2D cuerpoBala = balaInstanciada.GetComponent<Rigidbody2D>();
+
+                if (bala != null)
+                {
+                    bala.disparador = gameObject;
+                }
+
+                if (cuerpoBala != null && bala != null)
+                {
+                    cuerpoBala.linearVelocity = (jugador.position - puntoDisparo.position).normalized * bala.velocidad;
+                }
             }
         }
 
-        void Flip()
+        private void Voltear()
         {
-            movingRight = !movingRight;
+            moviendoDerecha = !moviendoDerecha;
             transform.Rotate(0f, 180f, 0f);
         }
 
-        void Shoot()
+        private void Disparar()
         {
-            if (bulletPrefab != null && firePoint != null)
+            if (prefabBala == null || puntoDisparo == null || jugador == null) return;
+
+            Vector2 direccion = (jugador.position - puntoDisparo.position).normalized;
+            GameObject balaInstanciada = Instantiate(prefabBala, puntoDisparo.position, puntoDisparo.rotation);
+
+            Bullet bala = balaInstanciada.GetComponent<Bullet>();
+            Rigidbody2D cuerpoBala = balaInstanciada.GetComponent<Rigidbody2D>();
+
+            if (bala != null)
             {
-                // Calcular dirección hacia el jugador
-                Vector2 direction = (player.position - firePoint.position).normalized;
-                
-                // Instanciar la bala
-                GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
-                
-                // Asignar el disparador para evitar auto-daño
-                bullet.GetComponent<Bullet>().shooter = gameObject;
-                
-                // Aplicar velocidad a la bala
-                bullet.GetComponent<Rigidbody2D>().linearVelocity = direction * bullet.GetComponent<Bullet>().speed;
-                
-                // Rotar la bala para que apunte correctamente
-                float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-                bullet.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+                bala.disparador = gameObject;
             }
+
+            if (cuerpoBala != null && bala != null)
+            {
+                cuerpoBala.linearVelocity = direccion * bala.velocidad;
+            }
+
+            float angulo = Mathf.Atan2(direccion.y, direccion.x) * Mathf.Rad2Deg;
+            balaInstanciada.transform.rotation = Quaternion.Euler(0f, 0f, angulo);
         }
     }
 }

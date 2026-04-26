@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8736964432952266058}
   - component: {fileID: 8597211309476164244}
   - component: {fileID: 6233948696107779336}
+  - component: {fileID: 3975785843606081929}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -180,13 +181,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b4b190f88e2744819a6eb542ca08aae9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MetalSlugPE.Player.PlayerController
-  health: 1
-  knockbackForce: 5
-  speed: 8
-  jumpForce: 18
-  bulletPrefab: {fileID: 8952336078229492913, guid: e2e6baabfbbad44fbb0d056357e4db1f, type: 3}
-  firePoint: {fileID: 1976088854560507895}
-  fireRate: 0.15
+  velocidad: 8
+  fuerzaSalto: 18
+  prefabBala: {fileID: 8952336078229492913, guid: e2e6baabfbbad44fbb0d056357e4db1f, type: 3}
+  puntoDisparo: {fileID: 1976088854560507895}
+  cadenciaDisparo: 0.15
+--- !u!114 &3975785843606081929
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 879943156241606625}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b12f162fca4352f46bd8cf44c5d1aee9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MetalSlugPE.Player.PlayerHealth
+  vidasMaximas: 3
+  duracionInvulnerabilidad: 2
 --- !u!1 &7471973317333257940
 GameObject:
   m_ObjectHideFlags: 0
