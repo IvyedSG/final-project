@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 1143741093821652468}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.633, y: 0.435, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -220,8 +220,8 @@ MonoBehaviour:
   detectionRange: 5
   groundCheck: {fileID: 4731529519076720718}
   rayDistance: 1
-  bulletPrefab: {fileID: 0}
-  firePoint: {fileID: 0}
+  bulletPrefab: {fileID: 8952336078229492913, guid: e2e6baabfbbad44fbb0d056357e4db1f, type: 3}
+  firePoint: {fileID: 1304879304662527852}
   fireRate: 1
   shootingRange: 7
 --- !u!61 &4824632005532925928
