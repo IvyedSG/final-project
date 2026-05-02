@@ -1,11 +1,15 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using MetalSlugPE.Core;
 
 namespace MetalSlugPE.Player
 {
-    public class PlayerHealth : MonoBehaviour
+    public class PlayerHealth : MonoBehaviour, IDamageable
     {
+        public static event Action<int, int> OnVidasCambiadas;
+
         [Header("Vidas")]
         [SerializeField] private int vidasMaximas = 3;
         [SerializeField] private float duracionInvulnerabilidad = 2f;
@@ -13,17 +17,20 @@ namespace MetalSlugPE.Player
         private int vidasActuales;
         private bool esInvulnerable;
         private bool estaReapareciendo;
+        private Rigidbody2D cuerpo;
 
         public int VidasActuales => vidasActuales;
         public bool EsInvulnerable => esInvulnerable;
-
-        private Rigidbody2D cuerpo;
 
         private void Awake()
         {
             cuerpo = GetComponent<Rigidbody2D>();
             vidasActuales = vidasMaximas;
-            Debug.Log("Vidas iniciales: " + vidasActuales);
+        }
+
+        private void Start()
+        {
+            OnVidasCambiadas?.Invoke(vidasActuales, vidasMaximas);
         }
 
         public void RecibirDanio(int danio)
@@ -31,8 +38,8 @@ namespace MetalSlugPE.Player
             if (danio <= 0) return;
             if (esInvulnerable || estaReapareciendo) return;
 
-            vidasActuales -= 1;
-            Debug.Log("Impacto recibido. Vidas restantes: " + vidasActuales);
+            vidasActuales -= danio;
+            OnVidasCambiadas?.Invoke(vidasActuales, vidasMaximas);
 
             if (vidasActuales <= 0)
             {
@@ -40,22 +47,15 @@ namespace MetalSlugPE.Player
                 return;
             }
 
-            Vector3 posicionMuerte = transform.position;
-            StartCoroutine(ReaparecerEnPosicionMuerte(posicionMuerte));
+            StartCoroutine(ReaparecerEnPosicionMuerte(transform.position));
         }
 
         private IEnumerator ReaparecerEnPosicionMuerte(Vector3 posicionMuerte)
         {
             estaReapareciendo = true;
-
-            if (cuerpo != null)
-            {
-                cuerpo.linearVelocity = Vector2.zero;
-                cuerpo.angularVelocity = 0f;
-            }
-
+            cuerpo.linearVelocity = Vector2.zero;
+            cuerpo.angularVelocity = 0f;
             transform.position = posicionMuerte;
-            Debug.Log("Respawn en posicion de muerte: " + posicionMuerte);
 
             yield return null;
             estaReapareciendo = false;
@@ -66,18 +66,16 @@ namespace MetalSlugPE.Player
         private IEnumerator VentanaInvulnerabilidad()
         {
             esInvulnerable = true;
-            Debug.Log("Inmunidad activada por " + duracionInvulnerabilidad + " segundos");
-
             yield return new WaitForSeconds(duracionInvulnerabilidad);
-
             esInvulnerable = false;
-            Debug.Log("Inmunidad finalizada");
         }
 
         private void Morir()
         {
-            Debug.Log("Sin vidas. Reiniciando escena...");
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            if (GameManager.Instance != null)
+                GameManager.Instance.GameOver();
+            else
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
     }
 }

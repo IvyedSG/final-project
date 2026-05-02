@@ -1,25 +1,26 @@
 using UnityEngine;
-using MetalSlugPE.Player;
+using MetalSlugPE.Core;
 
 namespace MetalSlugPE.Enemies
 {
     public class EnemyDamage : MonoBehaviour
     {
         [SerializeField] private int danio = 1;
+        [SerializeField] private float cooldownContacto = 1f;
+
+        private float tiempoUltimoGolpe = -Mathf.Infinity;
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
-            if (!collision.gameObject.CompareTag("Player")) return;
+            if (!collision.gameObject.CompareTag(Etiquetas.Jugador)) return;
+            if (Time.time < tiempoUltimoGolpe + cooldownContacto) return;
 
-            PlayerHealth saludJugador = collision.gameObject.GetComponent<PlayerHealth>();
-            if (saludJugador == null)
+            IDamageable objetivo = collision.gameObject.GetComponent<IDamageable>()
+                                ?? collision.gameObject.GetComponentInParent<IDamageable>();
+            if (objetivo != null)
             {
-                saludJugador = collision.gameObject.GetComponentInParent<PlayerHealth>();
-            }
-
-            if (saludJugador != null)
-            {
-                saludJugador.RecibirDanio(danio);
+                objetivo.RecibirDanio(danio);
+                tiempoUltimoGolpe = Time.time;
             }
         }
     }

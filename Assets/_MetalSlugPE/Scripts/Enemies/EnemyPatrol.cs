@@ -1,114 +1,99 @@
 using UnityEngine;
+using MetalSlugPE.Core;
 using MetalSlugPE.Weapons;
 
 namespace MetalSlugPE.Enemies
 {
     public class EnemyPatrol : MonoBehaviour
     {
-        public float velocidadPatrulla = 3f;
-        public float velocidadPersecucion = 5f;
-        public float rangoDeteccion = 5f;
-        public Transform verificadorSuelo;
-        public float distanciaRayo = 1f;
-
-        private bool moviendoDerecha = true;
-        private Rigidbody2D cuerpo;
-        private Transform jugador;
+        [Header("Movimiento")]
+        [SerializeField] private float velocidadPatrulla = 3f;
+        [SerializeField] private float velocidadPersecucion = 5f;
+        [SerializeField] private float rangoDeteccion = 5f;
+        [SerializeField] private Transform verificadorSuelo;
+        [SerializeField] private float distanciaRayo = 1f;
 
         [Header("Disparo")]
-        public GameObject prefabBala;
-        public Transform puntoDisparo;
-        public float cadenciaDisparo = 1f;
-        public float rangoDisparo = 7f;
-        private float TiempoDisparo = 0f;
+        [SerializeField] private GameObject prefabBala;
+        [SerializeField] private Transform puntoDisparo;
+        [SerializeField] private float cadenciaDisparo = 1f;
+        [SerializeField] private float rangoDisparo = 7f;
+
+        private bool moviendoDerecha = true;
+        private float velocidadHorizontal;
+        private float tiempoDisparo;
+        private Rigidbody2D cuerpo;
+        private Transform jugador;
 
         private void Start()
         {
             cuerpo = GetComponent<Rigidbody2D>();
-            GameObject objetoJugador = GameObject.FindGameObjectWithTag("Player");
+            GameObject objetoJugador = GameObject.FindGameObjectWithTag(Etiquetas.Jugador);
             if (objetoJugador != null)
-            {
                 jugador = objetoJugador.transform;
-            }
         }
 
         private void Update()
         {
             if (jugador == null)
             {
-                Patrullar();
+                velocidadHorizontal = moviendoDerecha ? velocidadPatrulla : -velocidadPatrulla;
                 return;
             }
 
-            float distanciaAlJugador = Vector2.Distance(transform.position, jugador.position);
+            float distancia = Vector2.Distance(transform.position, jugador.position);
 
-            if (distanciaAlJugador < rangoDeteccion)
-            {
+            if (distancia < rangoDeteccion)
                 Perseguir();
-            }
             else
-            {
                 Patrullar();
-            }
 
-            if (distanciaAlJugador < rangoDisparo && Time.time > TiempoDisparo)
+            if (distancia < rangoDisparo && Time.time > tiempoDisparo)
             {
                 Disparar();
-                TiempoDisparo = Time.time + cadenciaDisparo;
+                tiempoDisparo = Time.time + cadenciaDisparo;
             }
+        }
+
+        private void FixedUpdate()
+        {
+            cuerpo.linearVelocity = new Vector2(velocidadHorizontal, cuerpo.linearVelocity.y);
         }
 
         private void Patrullar()
         {
-            transform.Translate(Vector2.right * velocidadPatrulla * Time.deltaTime);
-            RaycastHit2D infoSuelo = Physics2D.Raycast(verificadorSuelo.position, Vector2.down, distanciaRayo);
-            if (infoSuelo.collider == false) Voltear();
+            velocidadHorizontal = moviendoDerecha ? velocidadPatrulla : -velocidadPatrulla;
+
+            if (verificadorSuelo != null)
+            {
+                RaycastHit2D infoSuelo = Physics2D.Raycast(
+                    verificadorSuelo.position, Vector2.down, distanciaRayo);
+                if (!infoSuelo.collider) Voltear();
+            }
         }
 
         private void Perseguir()
         {
+            float dirX = jugador.position.x > transform.position.x ? 1f : -1f;
+            velocidadHorizontal = dirX * velocidadPersecucion;
+
             if (jugador.position.x > transform.position.x && !moviendoDerecha) Voltear();
             else if (jugador.position.x < transform.position.x && moviendoDerecha) Voltear();
 
-            transform.position = Vector2.MoveTowards(
-                transform.position,
-                new Vector2(jugador.position.x, transform.position.y),
-                velocidadPersecucion * Time.deltaTime
-            );
-
-            if (puntoDisparo != null && jugador != null)
+            if (puntoDisparo != null)
             {
                 Vector2 direccion = (jugador.position - puntoDisparo.position).normalized;
                 float angulo = Mathf.Atan2(direccion.y, direccion.x) * Mathf.Rad2Deg;
                 puntoDisparo.rotation = Quaternion.Euler(0f, 0f, angulo);
-            }
-
-            if (Time.time > TiempoDisparo)
-            {
-                TiempoDisparo = Time.time + cadenciaDisparo;
-
-                if (prefabBala == null || puntoDisparo == null) return;
-
-                GameObject balaInstanciada = Instantiate(prefabBala, puntoDisparo.position, puntoDisparo.rotation);
-                Bullet bala = balaInstanciada.GetComponent<Bullet>();
-                Rigidbody2D cuerpoBala = balaInstanciada.GetComponent<Rigidbody2D>();
-
-                if (bala != null)
-                {
-                    bala.disparador = gameObject;
-                }
-
-                if (cuerpoBala != null && bala != null)
-                {
-                    cuerpoBala.linearVelocity = (jugador.position - puntoDisparo.position).normalized * bala.velocidad;
-                }
             }
         }
 
         private void Voltear()
         {
             moviendoDerecha = !moviendoDerecha;
-            transform.Rotate(0f, 180f, 0f);
+            Vector3 escala = transform.localScale;
+            escala.x *= -1f;
+            transform.localScale = escala;
         }
 
         private void Disparar()
@@ -116,23 +101,14 @@ namespace MetalSlugPE.Enemies
             if (prefabBala == null || puntoDisparo == null || jugador == null) return;
 
             Vector2 direccion = (jugador.position - puntoDisparo.position).normalized;
-            GameObject balaInstanciada = Instantiate(prefabBala, puntoDisparo.position, puntoDisparo.rotation);
+            GameObject balaObj     = Instantiate(prefabBala, puntoDisparo.position, puntoDisparo.rotation);
+            Bullet bala            = balaObj.GetComponent<Bullet>();
+            Rigidbody2D cuerpoBala = balaObj.GetComponent<Rigidbody2D>();
 
-            Bullet bala = balaInstanciada.GetComponent<Bullet>();
-            Rigidbody2D cuerpoBala = balaInstanciada.GetComponent<Rigidbody2D>();
-
-            if (bala != null)
-            {
-                bala.disparador = gameObject;
-            }
+            bala?.Inicializar(gameObject);
 
             if (cuerpoBala != null && bala != null)
-            {
-                cuerpoBala.linearVelocity = direccion * bala.velocidad;
-            }
-
-            float angulo = Mathf.Atan2(direccion.y, direccion.x) * Mathf.Rad2Deg;
-            balaInstanciada.transform.rotation = Quaternion.Euler(0f, 0f, angulo);
+                cuerpoBala.linearVelocity = direccion * bala.Velocidad;
         }
     }
 }

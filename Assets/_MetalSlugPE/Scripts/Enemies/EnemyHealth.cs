@@ -1,10 +1,12 @@
 using UnityEngine;
+using MetalSlugPE.Core;
 
 namespace MetalSlugPE.Enemies
 {
-    public class EnemyHealth : MonoBehaviour
+    public class EnemyHealth : MonoBehaviour, IDamageable
     {
-        public int saludMaxima = 1;
+        [SerializeField] private int saludMaxima = 1;
+
         private int saludActual;
 
         private void Start()
@@ -16,14 +18,7 @@ namespace MetalSlugPE.Enemies
         {
             saludActual -= danio;
             if (saludActual <= 0)
-            {
-                Morir();
-            }
-        }
-
-        private void Morir()
-        {
-            Destroy(gameObject);
+                Destroy(gameObject);
         }
     }
 }

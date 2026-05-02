@@ -1,106 +1,90 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using MetalSlugPE.Core;
 
 namespace MetalSlugPE.World
 {
     public class InfiniteGroundTilemap : MonoBehaviour
     {
-        [SerializeField] private Tilemap tilemap;
-        [SerializeField] private TileBase groundTile;
-        [SerializeField] private Transform target;
-        [SerializeField] private int groundY = -9;
-        [SerializeField] private int halfWidthInTiles = 60;
+        [SerializeField] private Tilemap mapa;
+        [SerializeField] private TileBase baldosaTerreno;
+        [SerializeField] private Transform objetivo;
+        [SerializeField] private int posYSuelo = -9;
+        [SerializeField] private int mitadAnchoBaldosas = 60;
 
-        private bool initialized;
-        private int generatedMinX;
-        private int generatedMaxX;
+        private bool inicializado;
+        private int minXGenerado;
+        private int maxXGenerado;
 
         private void Awake()
         {
-            if (tilemap == null)
-            {
-                tilemap = GetComponent<Tilemap>();
-            }
+            if (mapa == null)
+                mapa = GetComponent<Tilemap>();
         }
 
         private void Start()
         {
-            if (target == null)
+            if (objetivo == null)
             {
-                GameObject player = GameObject.FindGameObjectWithTag("Player");
-                if (player != null)
-                {
-                    target = player.transform;
-                }
+                GameObject jugador = GameObject.FindGameObjectWithTag(Etiquetas.Jugador);
+                if (jugador != null)
+                    objetivo = jugador.transform;
             }
 
-            if (groundTile == null)
-            {
-                groundTile = tilemap.GetTile(new Vector3Int(0, groundY, 0));
-            }
+            if (baldosaTerreno == null)
+                baldosaTerreno = mapa.GetTile(new Vector3Int(0, posYSuelo, 0));
 
-            if (tilemap == null || groundTile == null)
+            if (mapa == null || baldosaTerreno == null)
             {
                 enabled = false;
                 return;
             }
 
-            EnsureGroundAround(GetTargetCellX());
+            AsegurarSueloAlrededor(ObtenerCeldaXObjetivo());
         }
 
         private void Update()
         {
-            if (!enabled)
+            AsegurarSueloAlrededor(ObtenerCeldaXObjetivo());
+        }
+
+        private int ObtenerCeldaXObjetivo()
+        {
+            if (objetivo == null) return 0;
+            return mapa.WorldToCell(objetivo.position).x;
+        }
+
+        private void AsegurarSueloAlrededor(int centroX)
+        {
+            int minDeseado = centroX - mitadAnchoBaldosas;
+            int maxDeseado = centroX + mitadAnchoBaldosas;
+
+            if (!inicializado)
             {
+                RellenarRango(minDeseado, maxDeseado);
+                minXGenerado = minDeseado;
+                maxXGenerado = maxDeseado;
+                inicializado = true;
                 return;
             }
 
-            EnsureGroundAround(GetTargetCellX());
-        }
-
-        private int GetTargetCellX()
-        {
-            if (target == null)
+            if (minDeseado < minXGenerado)
             {
-                return 0;
+                RellenarRango(minDeseado, minXGenerado - 1);
+                minXGenerado = minDeseado;
             }
 
-            return tilemap.WorldToCell(target.position).x;
-        }
-
-        private void EnsureGroundAround(int centerX)
-        {
-            int desiredMin = centerX - halfWidthInTiles;
-            int desiredMax = centerX + halfWidthInTiles;
-
-            if (!initialized)
+            if (maxDeseado > maxXGenerado)
             {
-                FillRange(desiredMin, desiredMax);
-                generatedMinX = desiredMin;
-                generatedMaxX = desiredMax;
-                initialized = true;
-                return;
-            }
-
-            if (desiredMin < generatedMinX)
-            {
-                FillRange(desiredMin, generatedMinX - 1);
-                generatedMinX = desiredMin;
-            }
-
-            if (desiredMax > generatedMaxX)
-            {
-                FillRange(generatedMaxX + 1, desiredMax);
-                generatedMaxX = desiredMax;
+                RellenarRango(maxXGenerado + 1, maxDeseado);
+                maxXGenerado = maxDeseado;
             }
         }
 
-        private void FillRange(int minX, int maxX)
+        private void RellenarRango(int minX, int maxX)
         {
             for (int x = minX; x <= maxX; x++)
-            {
-                tilemap.SetTile(new Vector3Int(x, groundY, 0), groundTile);
-            }
+                mapa.SetTile(new Vector3Int(x, posYSuelo, 0), baldosaTerreno);
         }
     }
 }
